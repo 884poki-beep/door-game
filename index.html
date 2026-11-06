@@ -6,10 +6,10 @@ const $=id=>document.getElementById(id);let saved={world:1,found:[]};try{let s=J
 const floatingObjects=[];
 // イラストの主人公を透過テクスチャとして3D空間に配置
 const paperLoader=new THREE.TextureLoader();
-const ageLabels=['高齢（60〜70代）','中年（40〜50代）','大人（30代）','基準（16〜18歳）','少し幼い（12〜15歳）','さらに幼い（10〜12歳）','とても幼い（7〜9歳）','幼児（4〜6歳）'];
+const ageLabels=['幼児（4〜6歳）','とても幼い（7〜9歳）','さらに幼い（10〜12歳）','少し幼い（12〜15歳）','基準（16〜18歳）','大人（30代）','中年（40〜50代）','高齢（60〜70代）'];
 const paperTextures={};for(let age=0;age<8;age++){paperTextures[age]={};for(const d of ['front','left','back','right']){const t=paperLoader.load(`age${age+1}_${d}.png`);t.colorSpace=THREE.SRGBColorSpace;paperTextures[age][d]=t;}}
 let paperDirection='back',currentAge=-1;
-const ageForWorld=()=>{const phase=(world-1)%14;return phase<=7?phase:14-phase;};
+const ageForWorld=()=>{const phase=(world-1)%14;return 7-(phase<=7?phase:14-phase);};
 function updateAge(){const a=ageForWorld();if(a!==currentAge){currentAge=a;illustration.material.map=paperTextures[a][paperDirection];illustration.material.needsUpdate=true;}$('ageState').textContent='主人公：'+ageLabels[a]+'（1面ごとに若返り、幼児の次は年を重ねる）';}
 // 写真の雰囲気に寄せた、ミディアムヘアとワンピースのオリジナル3D主人公
 const player=new THREE.Group();scene.add(player);
