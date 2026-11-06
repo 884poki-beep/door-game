@@ -6,11 +6,11 @@ const $=id=>document.getElementById(id);let saved={world:1,found:[]};try{let s=J
 const floatingObjects=[];
 // イラストの主人公を透過テクスチャとして3D空間に配置
 const paperLoader=new THREE.TextureLoader();
-const ageLabels=['高齢（60〜70代）','中年（眼鏡）','中年（40〜50代）','大人（30代）','基準（16〜18歳）','少し幼い（12〜15歳）','さらに幼い（10〜12歳）','幼児（4〜9歳）'];
+const ageLabels=['高齢（60〜70代）','中年（40〜50代）','大人（30代）','基準（16〜18歳）','少し幼い（12〜15歳）','さらに幼い（10〜12歳）','とても幼い（7〜9歳）','幼児（4〜6歳）'];
 const paperTextures={};for(let age=0;age<8;age++){paperTextures[age]={};for(const d of ['front','left','back','right']){const t=paperLoader.load(`age${age+1}_${d}.png`);t.colorSpace=THREE.SRGBColorSpace;paperTextures[age][d]=t;}}
 let paperDirection='back',currentAge=-1;
 const ageForWorld=()=>{const phase=(world-1)%14;return phase<=7?phase:14-phase;};
-function updateAge(){const a=ageForWorld();if(a!==currentAge){currentAge=a;illustration.material.map=paperTextures[a][paperDirection];illustration.material.needsUpdate=true;}const step=a/7;const scale=1-.37*step;illustration.scale.set(scale,scale,1);$('ageState').textContent='主人公：'+ageLabels[a]+'（1面ごとに若返り、幼児の次は年を重ねる）';}
+function updateAge(){const a=ageForWorld();if(a!==currentAge){currentAge=a;illustration.material.map=paperTextures[7-a][paperDirection];illustration.material.needsUpdate=true;}$('ageState').textContent='主人公：'+ageLabels[a]+'（1面ごとに若返り、幼児の次は年を重ねる）';}
 // 写真の雰囲気に寄せた、ミディアムヘアとワンピースのオリジナル3D主人公
 const player=new THREE.Group();scene.add(player);
 const dressMat=mat(0x46323f),dressShade=mat(0x302733),hairMat=mat(0x30202a),hairLight=mat(0x51313b),skinMat=mat(0xd6a795),shoeMat=mat(0x211d28);
@@ -52,7 +52,7 @@ for(let side of [-1,1]){
 }
 // 元の簡易3D人形を非表示にし、切り抜いたイラストを表示
 player.children.forEach(part=>{part.visible=false});
-const illustration=new THREE.Mesh(new THREE.PlaneGeometry(1.8472,3.02),new THREE.MeshBasicMaterial({map:paperTextures[0].back,transparent:true,alphaTest:.08,side:THREE.DoubleSide,depthWrite:false}));
+const illustration=new THREE.Mesh(new THREE.PlaneGeometry(1.8472,3.02),new THREE.MeshBasicMaterial({map:paperTextures[7].back,transparent:true,alphaTest:.08,side:THREE.DoubleSide,depthWrite:false}));
 scene.add(illustration);
 player.visible=false;
 let walking=0,transitioning=false,transitionWarping=false,transitionStart=0,transitionTarget=0;let warpActive=false,warpElapsed=0;
@@ -146,9 +146,9 @@ if(crossingDoor){
 }
 player.position.x=nextX;player.position.z=nextZ;player.rotation.y=Math.atan2(-vx,-vz);body.position.y=1.15+Math.sin(tick*12)*.06}walking=THREE.MathUtils.lerp(walking,len&&!transitioning?1:0,Math.min(1,dt*7));hairLocks.forEach((h,i)=>{h.rotation.x=Math.sin(tick*(walking?9:1.6)+i*.8)*(.035+walking*.12);h.rotation.z=(i-3)*.065+Math.sin(tick*7+i)*walking*.06});coatTails.forEach((c,i)=>{c.rotation.x=-walking*.24+Math.sin(tick*10+i*1.4)*walking*.15});legs.forEach((leg,i)=>{leg.rotation.x=Math.sin(tick*11+i*Math.PI)*walking*.52});arms.forEach((a,i)=>{a.rotation.x=Math.sin(tick*11+i*Math.PI)*walking*.48;a.rotation.z=(i===0?-1:1)*(.16+walking*.05)});if(transitioning&&transitionWarping){let progress=Math.min(1,(tick-transitionStart)/1.2);player.position.z=THREE.MathUtils.lerp(player.position.z,door.position.z,Math.min(1,dt*3));player.position.x=THREE.MathUtils.lerp(player.position.x,door.position.x,Math.min(1,dt*3));player.scale.setScalar(1-progress*.65);camera.position.lerp(new THREE.Vector3(door.position.x,3,door.position.z+6+progress*5),Math.min(1,dt*2))}else player.scale.setScalar(1);if(keyItem&&!keyCollected){keyItem.rotation.y+=dt*2;keyItem.position.y=1.35+Math.sin(tick*3)*.22;if(Math.hypot(player.position.x-keyItem.position.x,player.position.z-keyItem.position.z)<1.6){keyCollected=true;scene.remove(keyItem);$('keyState').textContent='🗝️ 鍵を入手';msg('🗝️ 鍵を見つけた！扉へ向かおう。')}}let dist=Math.hypot(player.position.x-door.position.x,player.position.z-door.position.z);$('distance').textContent=dist<5?'✨ 扉を開けられます':'扉まで '+Math.round(dist)+' m';if(!transitioning||!transitionWarping)camera.position.lerp(new THREE.Vector3(player.position.x,player.position.y+4.1,player.position.z+8.7),Math.min(1,dt*3));camera.lookAt(player.position.x,1.9,player.position.z-6)}else{camera.position.set(0,4.1,19);camera.lookAt(0,2,-12)}floatingObjects.forEach(f=>{f.object.position.y=f.y+Math.sin(tick*f.speed+f.phase)*.32;f.object.rotation.y+=dt*.065});light.intensity=65+Math.sin(tick*3)*15;vistaGlow.material.opacity=.14+Math.sin(tick*2.1)*.06;portal.material.color.setHSL(.1,.2,.92+Math.sin(tick*3)*.06);particles.forEach((p,i)=>{p.position.set(Math.sin(i*8.7)*12,1+rand(i+700)*13+Math.sin(tick*.6+i)*.6,door.position.z+Math.cos(i*4.2)*11)});illustration.position.set(player.position.x,1.51+Math.sin(tick*9)*walking*.045,player.position.z);
 // Paper-doll: change illustration based on last movement direction.
-if(started && !transitioning){let next=paperDirection;if(keys.has('up'))next='back';else if(keys.has('down'))next='front';else if(keys.has('left'))next='left';else if(keys.has('right'))next='right';if(next!==paperDirection){paperDirection=next;illustration.material.map=paperTextures[currentAge<0?0:currentAge][next];illustration.material.needsUpdate=true;}}
+if(started && !transitioning){let next=paperDirection;if(keys.has('up'))next='back';else if(keys.has('down'))next='front';else if(keys.has('left'))next='left';else if(keys.has('right'))next='right';if(next!==paperDirection){paperDirection=next;illustration.material.map=paperTextures[7-(currentAge<0?0:currentAge)][next];illustration.material.needsUpdate=true;}}
 illustration.quaternion.copy(camera.quaternion);
 illustration.rotation.z=Math.sin(tick*9)*walking*.022;
-illustration.scale.setScalar((1-.37*(Math.max(0,currentAge)/8))*player.scale.x);
+illustration.scale.setScalar((1-.37*(Math.max(0,currentAge)/7))*player.scale.x);
 renderer.render(scene,camera)}window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});rebuild();animate();
 </script></body></html>
